@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+    test-postgres:
+        image: postgis/postgis:15-3.3
+        container_name: 'test-postgres'
+        ports:
+            - "54323:5432"
+        volumes:
+            - test-pgdata:/var/lib/postgresql/data
+        env_file:
+            - .env.dev.local
+        environment:
+            TZ: "Europe/Moscow"
+        restart: unless-stopped
+        networks:
+            test:
+                ipv4_address: 172.21.10.10
+
+    test-php:
+        build: ./
+        container_name: 'test-php'
+        volumes:
+            - ./:/var/www/app
+            - test-storage:/var/www/app/storage
+            - ./var/reports:/tmp/reports
+            - ./.php.ini:/usr/local/etc/php/conf.d/php.ini
+        environment:
+            APP_ENV: 'dev'
+            PHP_INI_SCAN_DIR: "/usr/local/etc/php/conf.d:/usr/local/etc/php/custom.d"
+            #PHP_IDE_CONFIG: "serverName=testshop.loc"
+            XDEBUG_SESSION: "PHPSTORM"
+        #entrypoint: /var/www/app/deployment/local/docker-entrypoint.sh
+        command: "php-fpm"
+        depends_on:
+            - test-postgres
+        links:
+            - test-postgres
+        restart: unless-stopped
+        tty: true
+        stdin_open: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            test:
+                ipv4_address: 172.21.10.11
+
+    test-nginx:
+        image: nginx:latest
+        container_name: 'test-nginx'
+        ports:
+            - "80:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
+            - ./:/var/www/app
+            - ./var/log/nginx:/var/log/nginx
+        depends_on:
+            - test-php
+        links:
+            - test-php
+        restart: unless-stopped
+        networks:
+            test:
+                ipv4_address: 172.21.10.13
+
+    test-rabbitmq:
+        image: rabbitmq:3.11.8-management
+        container_name: 'test-rabbitmq'
+        hostname: rabbitmq
+        restart: always
+        env_file:
+            - .env.dev.local
+        volumes:
+            - test-mqdata:/var/lib/rabbitmq
+            - ./var/log/rabbitmq:/var/log/rabbitmq
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        networks:
+            test:
+                ipv4_address: 172.21.10.15
+
+volumes:
+    test-pgdata:
+        driver: local
+    test-minio:
+        driver: local
+    test-mqdata:
+        driver: local
+    test-storage:
+        driver: local
+        name: test-storage
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './storage'
+
+networks:
+    test:
+        name: test-network
+        ipam:
+            driver: default
+            config:
+                - subnet: "172.21.10.0/24"
