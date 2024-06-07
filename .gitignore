@@ -1,0 +1,31 @@
+###> symfony/framework-bundle ###
+.env.local
+.env.dev.local
+.env.local.php
+.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+/public/files/
+
+###< symfony/webpack-encore-bundle ###
+
+/.idea/
+
+###> symfony/phpunit-bridge ###
+.phpunit
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+/docs/openapi.json
+
+/files/*
+!/files/.gitkeep
+
+
+**/__pycache__
