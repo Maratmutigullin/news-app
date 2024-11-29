@@ -7,6 +7,18 @@ ENV COMPOSER_MEMORY_LIMIT=-1
 ENV TZ=Europe/Moscow
 ENV LANG en_US.UTF-8
 
+# Установите зависимости для pecl_http, включая ICU
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev pkg-config libssl-dev libpng-dev libicu-dev
+
+# Установите и активируйте расширение raphf
+RUN pecl install raphf \
+    && docker-php-ext-enable raphf
+
+# Установите и активируйте расширение pecl_http
+RUN pecl install pecl_http \
+    && docker-php-ext-enable http
+
 # php
 RUN apt-get update \
     && apt-get -y --no-install-recommends install libpq-dev \
@@ -59,11 +71,11 @@ COPY ./php.ini /usr/local/etc/php/custom.d/php.ini
 
 RUN mkdir -p /var/www/app/var/cache \
     && mkdir -p /var/www/app/var/log \
-    && rm -rf /var/www/app/var/cache/* \
-    && composer install \
-    && php bin/console assets:install \
-    && php -d memory_limit=256M bin/console cache:clear \
-    && php bin/console cache:warm \
+#    && rm -rf /var/www/app/var/cache/* \
+#    && composer install \
+#    && php bin/console assets:install \
+#    && php -d memory_limit=256M bin/console cache:clear \
+#    && php bin/console cache:warm \
     && chmod -R 777 /var/www/app/var \
 
 # xdebug

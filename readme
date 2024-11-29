@@ -1,0 +1,15 @@
+composer require symfony/doctrine-messenger
+
+
+
+rabbit
+http://news-app.loc/rabbit/
+login:admin
+password: 123
+
+TRUNCATE TABLE news;
+
+команды
+php bin/console messenger:consume async -vv
+php bin/console cache:clear
+php bin/console app:check-news
